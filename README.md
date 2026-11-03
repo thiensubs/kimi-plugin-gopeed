@@ -18,7 +18,9 @@ gopeed-dl (this plugin's binary) --JSON over HTTP--> Gopeed app on your machine
 "saved to: ~/Downloads/big.zip"  <---------------- done!
 ```
 
-![Gopeed flow diagram](assets/idea-in-one-picture-safari.png)
+Open the interactive diagram: [`assets/idea-in-one-picture.html`](assets/idea-in-one-picture.html)
+(source spec: `assets/gopeed-idea.workflow.json`, built with
+[archify](https://github.com/ayghri/archify); render: `assets/idea-in-one-picture.png`).
 
 ## What one download turn looks like
 
@@ -29,9 +31,9 @@ the binary's output goes back into the chat history — so the next LLM step can
 
 Open the interactive diagram: [`assets/download-turn.html`](assets/download-turn.html)
 (source spec: `assets/download-turn.sequence.json`, built with
-[archify](https://github.com/ayghri/archify); screenshot: `assets/download-turn-safari.png`).
-
-![Download turn sequence diagram](assets/download-turn-safari.png)
+[archify](https://github.com/ayghri/archify); render: `assets/download-turn.png`). Both diagrams
+are standalone HTML — open in any browser, zoomable, with Archify's built-in Export dialog
+(PNG, SVG, WebP, WebM) when you need an image file.
 
 ## What is in here
 
