@@ -1,0 +1,45 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Gopeed download workflow",
+    "locale": "en",
+    "quality_profile": "showcase",
+    "viewBox": [1073, 528]
+  },
+  "lanes": [
+    { "id": "lane-you", "label": "You" },
+    { "id": "lane-kimi", "label": "kimi-code" },
+    { "id": "lane-gopeed", "label": "Gopeed app" }
+  ],
+  "nodes": [
+    { "id": "n-you", "lane": "lane-you", "col": 0, "type": "external", "label": "You", "width": 140 },
+    { "id": "n-ask", "lane": "lane-you", "col": 1, "type": "backend", "label": "ask: download this link", "width": 170 },
+    { "id": "n-pick", "lane": "lane-kimi", "col": 1, "type": "frontend", "label": "pick using-gopeed skill", "width": 170 },
+    { "id": "n-run", "lane": "lane-kimi", "col": 2, "type": "backend", "label": "loop runs gopeed-dl", "width": 150 },
+    { "id": "n-add", "lane": "lane-gopeed", "col": 3, "type": "cloud", "label": "POST /api/v1/tasks", "width": 150 },
+    { "id": "n-wait", "lane": "lane-kimi", "col": 4, "type": "backend", "label": "gopeed-dl wait polls", "width": 150 },
+    { "id": "n-done", "lane": "lane-you", "col": 5, "type": "external", "label": "saved to: file on disk", "width": 170 }
+  ],
+  "edges": [
+    { "from": "n-you", "to": "n-ask", "label": "type request", "role": "main" },
+    { "from": "n-ask", "to": "n-pick", "label": "skill selected", "role": "main" },
+    { "from": "n-pick", "to": "n-run", "label": "submit tool call", "role": "main" },
+    { "from": "n-run", "to": "n-add", "label": "add task", "role": "main" },
+    { "from": "n-add", "to": "n-wait", "label": "task created", "role": "main" },
+    { "from": "n-wait", "to": "n-done", "label": "poll until done", "role": "main" }
+  ],
+  "mainPath": ["n-you", "n-ask", "n-pick", "n-run", "n-add", "n-wait", "n-done"],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "The LLM does not fetch bytes",
+      "items": ["gopeed-dl binary does the HTTP work over the unix socket", "kimi-code only sees tool.result with the saved path"]
+    },
+    {
+      "dot": "emerald",
+      "title": "Every edge is one tool step",
+      "items": ["Each edge maps to one LLM tool call + tool result", "The loop continues until n-done is reached"]
+    }
+  ]
+}
