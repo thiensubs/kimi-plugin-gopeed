@@ -4,7 +4,8 @@ bin/gopeed-dl-*
 bin/gopeed-dl
 !.github/workflows/
 
-# Archify visual-check sidecars — generated per render, never committed.
-assets/*.visual-check.*.png
+# Archify visual-check sidecars — contact sheet HTML and receipt JSON
+# are test artifacts, never committed. PNG images are archify's native
+# export and are committed to the repo for README display.
 assets/*.visual-check.html
 assets/*.visual-check.json
