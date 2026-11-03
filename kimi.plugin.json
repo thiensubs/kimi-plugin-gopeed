@@ -1,0 +1,22 @@
+{
+  "name": "gopeed",
+  "version": "0.3.3",
+  "description": "Hand download links to Gopeed, the fast multi-protocol downloader, through its REST API — driven by a native binary compiled from Ruby with Spinel",
+  "keywords": [
+    "download",
+    "gopeed",
+    "http",
+    "bittorrent",
+    "magnet",
+    "downloader"
+  ],
+  "license": "MIT",
+  "skills": "./skills/",
+  "commands": "./commands/",
+  "interface": {
+    "displayName": "Gopeed",
+    "shortDescription": "Download a URL fast with Gopeed's multi-connection engine",
+    "longDescription": "Sometimes a download is slow with a plain curl. Gopeed (https://gopeed.com) splits one file into many connections and finishes much faster, and it also speaks BitTorrent and magnet links. This plugin talks to a running Gopeed app over its REST API — the desktop app's default unix socket (auto-detected) or TCP http://127.0.0.1:9999 — through gopeed-dl, a small native binary. The binary is written in Ruby and compiled ahead of time by Spinel (matz's AOT Ruby compiler), so it ships as one file with no Ruby to install; Spinel's runtime garbage-collects Ruby objects, and the binary proves its own hygiene — every 10th run (or GOPEEDSELFCHECK=1) it forces a full GC and reports the retained heap to stderr (~0.7 MB baseline, warns above 4 MiB).",
+    "developerName": "thiensubs"
+  }
+}

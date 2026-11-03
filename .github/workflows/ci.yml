@@ -1,0 +1,77 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.platform }}
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x86_64
+            runs-on: ubuntu-24.04
+          - platform: linux-arm64
+            runs-on: ubuntu-24.04-arm
+          - platform: darwin-x86_64
+            runs-on: macos-15-intel
+          - platform: darwin-arm64
+            runs-on: macos-15
+
+    steps:
+      - name: Checkout gopeed-plugin
+        uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          cc --version
+          uname -a
+
+      - name: Build Spinel from release tarball
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/spinel-src
+          curl -fsSL -o /tmp/spinel-src/spinel.tar.gz \
+            https://github.com/matz/spinel/archive/0ed86eae.tar.gz
+          tar -xzf /tmp/spinel-src/spinel.tar.gz -C /tmp/spinel-src --strip-components=1
+          cd /tmp/spinel-src
+          make deps
+          make
+          mkdir -p /tmp/spinel-bin
+          cp bin/spinel /tmp/spinel-bin/spinel
+          cp -R builtins packages lib include /tmp/spinel-bin/
+          chmod +x /tmp/spinel-bin/spinel
+          /tmp/spinel-bin/spinel --version
+
+      - name: Build gopeed-dl binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          SPINEL=/tmp/spinel-bin/spinel ./build.sh
+          file bin/gopeed-dl-*
+
+      - name: Test
+        shell: bash
+        run: ./test/run_tests.sh
+
+      - name: Upload gopeed-dl binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: gopeed-dl-${{ matrix.platform }}
+          path: bin/gopeed-dl-${{ matrix.platform }}
+          if-no-files-found: error
+          retention-days: 14

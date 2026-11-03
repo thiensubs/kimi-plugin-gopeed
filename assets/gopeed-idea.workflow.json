@@ -1,0 +1,48 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "Gopeed: the idea in one picture",
+    "locale": "en",
+    "quality_profile": "showcase"
+  },
+  "lanes": [
+    { "id": "you", "label": "You" },
+    { "id": "kimi", "label": "kimi-code + helper" },
+    { "id": "gopeed", "label": "Gopeed on your computer" }
+  ],
+  "phases": [
+    { "id": "ask", "label": "You ask", "fromCol": 0, "toCol": 1 },
+    { "id": "pass", "label": "Pass the note", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "zoom", "label": "Download at zoom speed", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "machine", "label": "All on your machine", "lane": "gopeed", "fromCol": 3, "toCol": 5, "variant": "emphasis" }
+  ],
+  "mainPath": ["ask", "chat", "helper", "app", "split", "saved", "done"],
+  "nodes": [
+    { "id": "ask", "lane": "you", "col": 0, "type": "external", "label": "You say: download!", "sublabel": "one big link", "width": 148 },
+    { "id": "chat", "lane": "kimi", "col": 1, "type": "frontend", "label": "kimi-code hears you", "sublabel": "/download or the skill", "width": 132 },
+    { "id": "helper", "lane": "kimi", "col": 2, "type": "backend", "label": "gopeed-dl helper", "sublabel": "one tiny native binary", "width": 132 },
+    { "id": "doctor", "lane": "kimi", "col": 3, "type": "security", "label": "doctor check", "sublabel": "is Gopeed awake?", "width": 124 },
+    { "id": "app", "lane": "gopeed", "col": 3, "type": "cloud", "label": "Gopeed app", "sublabel": "the download robot", "width": 132 },
+    { "id": "split", "lane": "gopeed", "col": 4, "type": "backend", "label": "Slices up the file", "sublabel": "like pizza slices", "width": 140 },
+    { "id": "saved", "lane": "gopeed", "col": 5, "type": "database", "label": "File saved!", "sublabel": "~/Downloads/big.zip", "width": 132 },
+    { "id": "done", "lane": "you", "col": 5, "type": "frontend", "label": "You open the file", "sublabel": "yay, it was fast!", "width": 132 }
+  ],
+  "edges": [
+    { "id": "e-ask-chat", "from": "ask", "to": "chat", "label": "you type the link", "role": "main" },
+    { "id": "e-chat-helper", "from": "chat", "to": "helper", "label": "/download <link>", "role": "main", "variant": "emphasis" },
+    { "id": "e-helper-doctor", "from": "helper", "to": "doctor", "label": "first: awake?", "role": "branch", "variant": "dashed" },
+    { "id": "e-doctor-app", "from": "doctor", "to": "app", "label": "start it if asleep", "role": "branch", "variant": "dashed" },
+    { "id": "e-helper-app", "from": "helper", "to": "app", "label": "sends a JSON note (HTTP or unix socket)", "role": "main", "variant": "emphasis" },
+    { "id": "e-app-split", "from": "app", "to": "split", "label": "chop chop", "role": "main" },
+    { "id": "e-split-saved", "from": "split", "to": "saved", "label": "grabs all pieces at once", "role": "main", "variant": "emphasis" },
+    { "id": "e-saved-done", "from": "saved", "to": "done", "label": "tells you: saved!", "role": "return" }
+  ],
+  "cards": [
+    { "dot": "cyan", "title": "Why so fast?", "items": ["One pipe is slow; many pipes at once are fast", "Like one straw vs a whole bunch of straws in a milkshake"] },
+    { "dot": "emerald", "title": "No sleeping robots", "items": ["doctor checks Gopeed is awake before we start", "start launches it if it is asleep"] },
+    { "dot": "violet", "title": "One tiny helper file", "items": ["gopeed-dl is a single native binary made from Ruby", "No Ruby to install, and it never leaks memory"] }
+  ]
+}

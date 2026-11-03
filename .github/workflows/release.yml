@@ -1,0 +1,204 @@
+name: Release
+
+# Publishing is triggered by a tag, never by a branch push.
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PLUGIN_ID: gopeed
+  PLUGIN_ARCHIVE: gopeed-plugin.zip
+  PLATFORMS: linux-x86_64 linux-arm64 darwin-x86_64 darwin-arm64
+  SPINEL_VERSION: 2026.10.25
+
+jobs:
+  build:
+    name: build ${{ matrix.platform }}
+    runs-on: ${{ matrix.runs-on }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - platform: linux-x86_64
+            runs-on: ubuntu-24.04
+          - platform: linux-arm64
+            runs-on: ubuntu-24.04-arm
+          - platform: darwin-x86_64
+            runs-on: macos-15-intel
+          - platform: darwin-arm64
+            runs-on: macos-15
+
+    steps:
+      - name: Checkout gopeed-plugin
+        uses: actions/checkout@v4
+
+      - name: Toolchain
+        run: |
+          cc --version
+          uname -a
+
+      - name: Build Spinel from release tarball
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/spinel-src
+          curl -fsSL -o /tmp/spinel-src/spinel.tar.gz \
+            https://github.com/matz/spinel/archive/0ed86eae.tar.gz
+          tar -xzf /tmp/spinel-src/spinel.tar.gz -C /tmp/spinel-src --strip-components=1
+          cd /tmp/spinel-src
+          make deps
+          make
+          mkdir -p /tmp/spinel-bin
+          cp bin/spinel /tmp/spinel-bin/spinel
+          cp -R builtins packages lib include /tmp/spinel-bin/
+          chmod +x /tmp/spinel-bin/spinel
+          /tmp/spinel-bin/spinel --version
+
+      - name: Build gopeed-dl binary
+        shell: bash
+        run: |
+          set -euo pipefail
+          SPINEL=/tmp/spinel-bin/spinel ./build.sh
+          file bin/gopeed-dl-*
+
+      - name: Test
+        shell: bash
+        run: ./test/run_tests.sh
+
+      - name: Upload gopeed-dl binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: gopeed-dl-${{ matrix.platform }}
+          path: bin/gopeed-dl-${{ matrix.platform }}
+          if-no-files-found: error
+          retention-days: 14
+
+  package:
+    name: package
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout gopeed-plugin
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Collect gopeed-dl binaries
+        uses: actions/download-artifact@v4
+        with:
+          pattern: gopeed-dl-*
+          path: .prebuilt
+
+      - name: Verify all platforms and architectures
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          command -v file >/dev/null || { echo "::error::file(1) is required"; exit 1; }
+
+          for p in $PLATFORMS; do
+            dir=".prebuilt/gopeed-dl-$p"
+            bin="$dir/gopeed-dl-$p"
+            [ -f "$bin" ] || { echo "::error::binary for $p is missing ($bin)"; exit 1; }
+            case "$p" in
+              darwin-x86_64) want=x86_64 ;;
+              darwin-arm64) want=arm64 ;;
+              linux-x86_64) want=x86-64 ;;
+              linux-arm64) want=aarch64 ;;
+            esac
+            if ! file "$bin" | grep -E -- "$want" >/dev/null; then
+              echo "::error::$bin is not $p"
+              file "$bin"
+              exit 1
+            fi
+            echo "ok: $p -> $(file "$bin" | head -1)"
+          done
+          ls -laR .prebuilt/
+
+      - name: Assemble plugin tree
+        shell: bash
+        run: |
+          set -euo pipefail
+          command -v zip >/dev/null || { echo "::error::zip(1) is required to build the archive"; exit 1; }
+
+          stage="$RUNNER_TEMP/plugin"
+          rm -rf "$stage"
+          mkdir -p "$stage"
+
+          # Tracked files only
+          git archive HEAD | tar -xf - -C "$stage"
+          rm -rf "$stage/.github"
+
+          mkdir -p "$stage/bin/prebuilt"
+          for p in $PLATFORMS; do
+            mkdir -p "$stage/bin/prebuilt/$p"
+            cp ".prebuilt/gopeed-dl-$p/gopeed-dl-$p" "$stage/bin/prebuilt/$p/gopeed-dl"
+          done
+          find "$stage/bin/prebuilt" -type f -exec chmod 755 {} +
+
+          version=$(python3 -c 'import json;print(json.load(open("kimi.plugin.json"))["version"])')
+          tag="${GITHUB_REF_NAME#v}"
+          if [ "$version" != "$tag" ]; then
+            echo "::error::kimi.plugin.json version '$version' does not match tag 'v$tag'"
+            exit 1
+          fi
+
+          {
+            echo "STAGE=$stage"
+            echo "PLUGIN_VERSION=$version"
+          } >> "$GITHUB_ENV"
+
+          echo "--- plugin tree ---"
+          find "$stage" -maxdepth 3 | sed "s|$stage|.|" | sort
+
+      - name: Build release archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          archive="dist/$PLUGIN_ARCHIVE"
+          ( cd "$STAGE" && zip -q -r -X "$GITHUB_WORKSPACE/$archive" . )
+          unzip -t "$archive" >/dev/null
+
+          listing="$RUNNER_TEMP/zip-list.txt"
+          unzip -l "$archive" > "$listing"
+          grep -qE '[[:space:]]kimi\.plugin\.json$' "$listing" \
+            || { echo "::error::kimi.plugin.json is not at the archive root"; head -20 "$listing"; exit 1; }
+
+          for p in $PLATFORMS; do
+            grep -qE " bin/prebuilt/$p/gopeed-dl$" "$listing" \
+              || { echo "::error::$archive is missing bin/prebuilt/$p/gopeed-dl"; exit 1; }
+          done
+          echo "archive contains every prebuilt binary for $PLATFORMS"
+
+          ( cd dist && sha256sum ./* > SHA256SUMS && cat SHA256SUMS )
+
+      - name: Publish release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          tag="$GITHUB_REF_NAME"
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "release $tag exists — uploading with --clobber"
+            gh release upload "$tag" dist/* --clobber
+          else
+            gh release create "$tag" dist/* \
+              --title "$tag" \
+              --generate-notes \
+              --verify-tag
+          fi
+          gh release view "$tag" --json assets --jq '.assets[].name'

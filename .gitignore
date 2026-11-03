@@ -1,0 +1,5 @@
+# CI-built native binaries — produced by .github/workflows per platform,
+# never committed. The installer downloads them from the GitHub release.
+bin/gopeed-dl-*
+bin/gopeed-dl
+!.github/workflows/
