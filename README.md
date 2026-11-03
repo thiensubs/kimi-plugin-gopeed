@@ -18,7 +18,7 @@ gopeed-dl (this plugin's binary) --JSON over HTTP--> Gopeed app on your machine
 "saved to: ~/Downloads/big.zip"  <---------------- done!
 ```
 
-![Gopeed flow diagram](assets/idea-in-one-picture.png)
+Open the interactive diagram: [`assets/idea-in-one-picture.html`](assets/idea-in-one-picture.html)
 
 ## What one download turn looks like
 
@@ -27,7 +27,7 @@ plugin's `/download` command (or the `using-gopeed` skill), the loop runs the bi
 the binary's output goes back into the chat history — so the next LLM step can see
 "saved to: ~/Downloads/big.zip" and answer you.
 
-![Download turn sequence diagram](assets/download-turn.png)
+Open the interactive diagram: [`assets/download-turn.html`](assets/download-turn.html)
 
 ## What is in here
 
