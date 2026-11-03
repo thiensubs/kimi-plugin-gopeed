@@ -3,3 +3,8 @@
 bin/gopeed-dl-*
 bin/gopeed-dl
 !.github/workflows/
+
+# Archify visual-check sidecars — generated per render, never committed.
+assets/*.visual-check.*.png
+assets/*.visual-check.html
+assets/*.visual-check.json

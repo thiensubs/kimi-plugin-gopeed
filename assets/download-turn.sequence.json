@@ -6,7 +6,7 @@
     "locale": "en",
     "quality_profile": "showcase",
     "column_fit": "spread",
-    "viewBox": [940, 800]
+    "viewBox": [940, 480]
   },
   "participants": [
     { "id": "you", "type": "external", "label": "You", "sublabel": "type: download this link!" },
@@ -17,32 +17,29 @@
     { "id": "gopeed", "type": "cloud", "label": "Gopeed app", "sublabel": "unix socket or TCP 9999" }
   ],
   "segments": [
-    { "from": 160, "to": 740, "label": "One turn = many small LLM steps" }
+    { "from": 72, "to": 435, "label": "One turn = many small LLM steps" }
   ],
   "messages": [
-    { "id": "m1", "from": "you", "to": "model", "y": 190, "label": "download this big link!", "variant": "emphasis" },
-    { "id": "m2", "from": "model", "to": "skill", "y": 236, "label": "picks the plugin: /download or skill using-gopeed", "variant": "emphasis" },
-    { "id": "m3", "from": "skill", "to": "loop", "y": 282, "label": "expanded instructions: add URL, then wait", "variant": "default" },
-    { "id": "m4", "from": "loop", "to": "helper", "y": 328, "label": "runs bin/gopeed-dl add <url>", "variant": "emphasis" },
-    { "id": "m5", "from": "helper", "to": "gopeed", "y": 374, "label": "POST /api/v1/tasks  (JSON note)", "variant": "default" },
-    { "id": "m6", "from": "gopeed", "to": "helper", "y": 420, "label": "task id", "variant": "return" },
-    { "id": "m7", "from": "loop", "to": "helper", "y": 466, "label": "runs gopeed-dl wait <id>", "variant": "emphasis" },
-    { "id": "m8", "from": "helper", "to": "gopeed", "y": 512, "label": "GET /api/v1/tasks/<id>  (polls)", "variant": "default" },
-    { "id": "m9", "from": "gopeed", "to": "helper", "y": 558, "label": "done 100% - file on disk", "variant": "return" },
-    { "id": "m10", "from": "helper", "to": "loop", "y": 604, "label": "stdout: saved to: ~/Downloads/big.zip", "variant": "return" },
-    { "id": "m11", "from": "loop", "to": "model", "y": 650, "label": "tool.result goes back into history", "variant": "emphasis", "note": "loopService.ts appends tool.result; next LLM call sees it" },
-    { "id": "m12", "from": "model", "to": "you", "y": 706, "label": "Done! Saved to ~/Downloads/big.zip", "variant": "return" }
+    { "id": "m1", "from": "you", "to": "model", "y": 160, "label": "download this big link!", "variant": "emphasis" },
+    { "id": "m2", "from": "model", "to": "skill", "y": 188, "label": "picks the plugin", "variant": "emphasis" },
+    { "id": "m3", "from": "skill", "to": "loop", "y": 216, "label": "add URL then wait", "variant": "default" },
+    { "id": "m4", "from": "loop", "to": "helper", "y": 244, "label": "gopeed-dl add", "variant": "emphasis" },
+    { "id": "m5", "from": "helper", "to": "gopeed", "y": 272, "label": "POST /api/v1/tasks", "variant": "default" },
+    { "id": "m6", "from": "gopeed", "to": "helper", "y": 300, "label": "task id", "variant": "return" },
+    { "id": "m7", "from": "loop", "to": "helper", "y": 328, "label": "gopeed-dl wait", "variant": "emphasis" },
+    { "id": "m8", "from": "helper", "to": "gopeed", "y": 356, "label": "GET /api/v1/tasks/<id>", "variant": "default" },
+    { "id": "m9", "from": "gopeed", "to": "helper", "y": 384, "label": "done 100%", "variant": "return" }
   ],
   "activations": [
-    { "participant": "model", "from": 184, "to": 712, "type": "backend" },
-    { "participant": "skill", "from": 230, "to": 288, "type": "frontend" },
-    { "participant": "loop", "from": 276, "to": 656, "type": "backend" },
-    { "participant": "helper", "from": 322, "to": 610, "type": "messagebus" },
-    { "participant": "gopeed", "from": 368, "to": 564, "type": "cloud" }
+    { "participant": "model", "from": 160, "to": 384, "type": "backend" },
+    { "participant": "skill", "from": 188, "to": 244, "type": "frontend" },
+    { "participant": "loop", "from": 244, "to": 384, "type": "backend" },
+    { "participant": "helper", "from": 300, "to": 384, "type": "messagebus" },
+    { "participant": "gopeed", "from": 356, "to": 384, "type": "cloud" }
   ],
   "cards": [
-    { "dot": "cyan", "title": "The robot reads its own homework", "items": ["Tool output is appended to the chat history", "The next LLM call sees saved to: ... and can tell you"] },
-    { "dot": "emerald", "title": "One turn, many steps", "items": ["The loop keeps calling the LLM until it stops asking for tools", "Each step is one little request + answer"] },
-    { "dot": "violet", "title": "You can watch it live", "items": ["gopeed-dl wait prints progress every second", "The model sees every line, so it can report speed"] }
+    { "dot": "cyan", "title": "The robot reads its own homework", "items": ["Tool output appended to chat history", "Next LLM call sees saved to: ..."] },
+    { "dot": "emerald", "title": "One turn, many steps", "items": ["Loop calls LLM until no more tools", "Each step is request + answer"] },
+    { "dot": "violet", "title": "You can watch it live", "items": ["gopeed-dl wait prints progress", "Model sees every line"] }
   ]
 }
